@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Sidanira Siswa</title>
+    <style>
+        /* Basic CSS from the route - consider moving to a separate file if complex */
+        @import url("https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap");
+        @font-face {
+            font-family: NotoSansCJK;
+            src: url(/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc);
+        }
+        body { font-family: "Noto Sans", NotoSansCJK, sans-serif; font-size: 8pt; margin: 0.5cm; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 1em; page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        th, td { border: 1px solid #ccc; padding: 3px; text-align: left; word-wrap: break-word; vertical-align: top; }
+        th { background-color: #e0e0e0; font-weight: bold; text-align: center; }
+        h1 { text-align: center; font-size: 12pt; margin-bottom: 1em; }
+        .page-break { page-break-before: always; }
+        .text-center { text-align: center; }
+        .nowrap { white-space: nowrap; }
+    </style>
+</head>
+<body>
+    <h1>REKAPITULASI NILAI AKHIR SIDANIRA</h1>
+    {# Add School Name, Year etc. if needed #}
+    <p style="text-align: center; margin-bottom: 1.5em;">SMP NEGERI 25</p>
+
+    <table>
+        <thead>
+            <tr>
+                {% for header in headers %}
+                    <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            {% set scores = student.scores_data if student.scores_data is mapping else {} %}
+            <tr>
+                <td class="text-center">{{ loop.index }}</td>
+                {% for header in headers[1:] %} {# Skip "No" header #}
+                    {% set found_key = none %}
+                    {% for key, mapped_header in key_map.items() %}
+                        {% if mapped_header == header %}
+                            {% set found_key = key %}
+                            {% break %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if found_key == "student_id" %}
+                        <td class="nowrap">{{ student.student_id }}</td>
+                    {% elif found_key == "name" %}
+                        <td>{{ student.name }}</td>
+                    {% elif found_key %}
+                        {# Get value from scores_data using the original key #}
+                        {% set value = scores.get(found_key, "") %}
+                        {# Format numbers if needed, handle None #}
+                        {% if value is number and value is not none %}
+                            <td class="text-center">{{ "%.2f"|format(value|float) if value|string != value|string|int|string else value|int }}</td>
+                        {% else %}
+                            <td>{{ value if value is not none else "" }}</td>
+                        {% endif %}
+                    {% else %}
+                        <td></td> {# Placeholder for headers not mapped #}
+                    {% endif %}
+                {% endfor %}
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="{{ headers|length }}" class="text-center">Tidak ada data siswa.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
+
